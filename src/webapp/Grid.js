@@ -16,7 +16,7 @@ export default class Grid extends Component {
         const viewBoxWidth = 10 * width + strokeWidth
         const viewBoxHieght = 10 * length + strokeWidth
 
-        const svg = newSvgElement('svg',
+        this.svg = newSvgElement('svg',
             {
                 width: '100%',
                 height: '100%',
@@ -36,11 +36,11 @@ export default class Grid extends Component {
                         stroke: "black",
                         "stroke-width": `${strokeWidth}`
                     })
-               svg.appendChild(internalBoundary)
+               this.svg.appendChild(internalBoundary)
             }
         }
 
-        this.element.appendChild(svg)
+        this.element.appendChild(this.svg)
 
         seedColony.map(cellCoordinate => {
             const {row, column} = cellCoordinate
@@ -51,7 +51,7 @@ export default class Grid extends Component {
                     width: 10,
                     height: 10
                 })
-            svg.appendChild(cell)
+            this.svg.appendChild(cell)
         })
     }
 }

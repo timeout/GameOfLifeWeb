@@ -7,7 +7,9 @@ export default class Button extends Component {
 
         this._element = newElement('button', {}, "Start")
         this.style = {
-            "margin-top": "10px",
+            "position": "absolute",
+            "width": "100px",
+            "margin-top": "510px",
             padding: "10px"
         }
         this.element.addEventListener("click", handlButtonClick, false)

@@ -6,8 +6,6 @@ import Habitat from './Habitat'
 import Button from './Button'
 import InfoDisplay from './InfoDisplay'
 
-import mockResponse from './mocks/habitatConfiguration'
-
 const R_NUMBER = 33
 
 const generateSeedColony = (width = 5, length = 5) => {
@@ -16,8 +14,6 @@ const generateSeedColony = (width = 5, length = 5) => {
         for (let column = 0; column < length; column++)  {
             // generate random number
             const sample = Math.random() * 100
-            // console.log('sample:', sample)
-            // console.log('r number:', R_NUMBER)
 
             // if number above threshold create cell otherwise continue
             if (R_NUMBER > sample) {
@@ -55,34 +51,41 @@ export default class Simulation extends Component {
         }
 
         this._element = newElement('div', {id: 'simulation'})
+        this.style = {
+            display: "flex",
+        }
 
         this.handleButtonClick = this.handleButtonClick.bind(this)
 
         this.habitat = new Habitat(this.empty_habitat)
+        this.infoDisplay = new InfoDisplay()
 
         this.addChild(this.habitat)
         this.addChild(new Button(this.handleButtonClick))
-        this.addChild(new InfoDisplay())
+        this.addChild(this.infoDisplay)
     }
 
-    updateHabitat (habitatConfiguration) {
-        this.removeChild(this.habitat)
-        this.habitat = new Habitat(habitatConfiguration)
-        this.addChild(this.habitat)
-        this.rerender()
-    }
+    handleButtonClick (e) {
+        const display = document.getElementById("display")
+        const habitat = document.getElementById("habitat")
 
-    handleButtonClick () {
         // reset
         if (this.intervalId) {
             clearInterval(this.intervalId)
             this.intervalId = null
+            display.dispatchEvent(new CustomEvent('resetDisplay'))
         }
 
         // generate initial seed colony
         const seedColony = generateSeedColony(this.width, this.length)
         let habitatConfiguration = Object.assign({}, this.empty_habitat, { seedColony })
-        this.updateHabitat(habitatConfiguration)
+
+        let updateHabitatEvent = new CustomEvent('updateHabitatEvent', {
+            detail: habitatConfiguration
+        })
+
+        display.dispatchEvent(updateHabitatEvent)
+        habitat.dispatchEvent(updateHabitatEvent)
 
         console.log(`A new simulation was started: ${new Date().toISOString()}`)
 
@@ -90,17 +93,17 @@ export default class Simulation extends Component {
         this.intervalId = setInterval(() => {
             requestNextGeneration('http://localhost:8080/api/gameoflife', habitatConfiguration)
                 .then(response => {
-                    // console.log('response:', response)
                     habitatConfiguration = response
                     if (!habitatConfiguration.seedColony.length) {
                         console.log('goodbye')
                         clearInterval(this.intervalId)
                     }
 
-                    this.updateHabitat(habitatConfiguration)
-
-                    const updateHabitatEvent = new CustomEvent('updateHabitat', habitatConfiguration)
-                    this._element.dispatchEvent(updateHabitatEvent)
+                    updateHabitatEvent = new CustomEvent('updateHabitatEvent', {
+                        detail: habitatConfiguration
+                    })
+                    display.dispatchEvent(updateHabitatEvent)
+                    habitat.dispatchEvent(updateHabitatEvent)
                 })
                 .catch(err => {
                     console.log('Unable to fetch habitat configuration:', err);
